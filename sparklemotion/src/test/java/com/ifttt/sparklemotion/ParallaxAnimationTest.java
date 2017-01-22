@@ -1,9 +1,10 @@
 package com.ifttt.sparklemotion;
 
 import android.test.suitebuilder.annotation.SmallTest;
-import android.util.Log;
 import android.view.View;
+
 import com.ifttt.sparklemotion.animations.ParallaxAnimation;
+
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -22,7 +23,7 @@ public class ParallaxAnimationTest {
 
         SetterAnswer answer = new SetterAnswer();
         doAnswer(answer).when(dummyView).setTranslationX(Mockito.anyFloat());
-        ParallaxAnimation animation = new ParallaxAnimation(Page.singlePage(0), 4);
+        ParallaxAnimation animation = new ParallaxAnimation(4);
         animation.onAnimate(dummyView, 0.3f, 0);
 
         assertTrue(-7.5f - answer.value < 0.001f);
@@ -35,7 +36,7 @@ public class ParallaxAnimationTest {
 
         SetterAnswer answer = new SetterAnswer();
         doAnswer(answer).when(dummyView).setTranslationX(Mockito.anyFloat());
-        ParallaxAnimation animation = new ParallaxAnimation(Page.singlePage(0));
+        ParallaxAnimation animation = new ParallaxAnimation();
         animation.onAnimate(dummyView, 0.3f, 0);
 
         assertTrue(-15f - answer.value < 0.001f);

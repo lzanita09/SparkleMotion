@@ -1,164 +1,184 @@
 package com.ifttt.sparklemotion;
 
 import android.support.annotation.NonNull;
+import android.support.v4.util.SimpleArrayMap;
 import android.support.v4.view.ViewPager;
+import android.view.View;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
- * Top level Builder class. Used for constructing a {@link SparkleAnimationPresenter} and
- * associate it with {@link ViewPager}.
+ * Animation driver, used to store all {@link Animation} assigned to it and run animations given the current
+ * circumstance (e.g current page, View visibility). For ViewPager animations,
+ * {@link #presentAnimations(View, float, float)} will be called for every frame the child View is scrolled. For
+ * Decor animations, {@link #presentDecorAnimations(int, float)} will be called for every frame the ViewPager is
+ * scrolled.
  */
 public class SparkleMotion {
-
-    private final ViewPager mViewPager;
-    private SparkleViewPagerLayout mViewPagerLayout;
-    private SparkleAnimationPresenter mPresenter;
-
     /**
-     * Animations to be used for a set of target Views. Will be cleared after calling
-     * {@link #on(int...)}.
+     * A SimpleArrayMap that saves all animations newBuilder the target View's ID as key.
      */
-    private ArrayList<Animation> mAnimations;
+    private SimpleArrayMap<Integer, ArrayList<Animation>> animations;
 
     /**
-     * Start constructing a {@link SparkleMotion} builder with a {@link ViewPager} instance. Animations
+     * A SimpleArrayMap that saves all animations newBuilder the target
+     * {@link View} as key.
+     */
+    private SimpleArrayMap<View, ArrayList<Animation>> decorAnimations;
+
+    /**
+     * An ArrayList that saves the ids of the Views being animated newBuilder Sparkle Motion.
+     */
+    private ArrayList<Integer> animatedViews;
+
+    /**
+     * Start constructing a {@link SparkleMotion} builder newBuilder a {@link ViewPager} instance. Animations
      * assigned
      * to this builder will be assigned to the ViewPager.
      *
      * @param viewPager Target ViewPager.
      * @return this instance to chain functions.
      */
-    public static SparkleMotion with(@NonNull ViewPager viewPager) {
-        return new SparkleMotion(viewPager);
+    public static AnimationBuilder newBuilder(@NonNull ViewPager viewPager) {
+        return new AnimationBuilder(viewPager);
     }
 
     /**
-     * Start constructing a {@link SparkleMotion} builder with a {@link SparkleViewPagerLayout}
+     * Start constructing a {@link SparkleMotion} builder newBuilder a {@link SparkleViewPagerLayout}
      * instance. Animations
      * assigned to this builder will be assigned to the ViewPager.
      *
      * @param viewPagerLayout TargetViewPagerLayout.
      * @return this instance to chain functions.
      */
-    public static SparkleMotion with(@NonNull SparkleViewPagerLayout viewPagerLayout) {
-        return new SparkleMotion(viewPagerLayout);
+    public static ExternalAnimationBuilder newBuilder(@NonNull SparkleViewPagerLayout viewPagerLayout) {
+        return new ExternalAnimationBuilder(viewPagerLayout);
+    }
+
+    SparkleMotion() {
+        animations = new SimpleArrayMap<>(3);
+        decorAnimations = new SimpleArrayMap<>(3);
+        animatedViews = new ArrayList<>(3);
     }
 
     /**
-     * Private constructor for initializing the instance with ViewPager {@link ViewPager}
-     * and {@link SparkleAnimationPresenter} reference.
+     * Add animations to the target View. The View's id is used as key.
      *
-     * @param viewPager ViewPager object.
+     * @param id         Id of the target View.
+     * @param animation Animations to be associated to this View.
      */
-    private SparkleMotion(@NonNull ViewPager viewPager) {
-        mViewPager = viewPager;
-        init();
+    void addAnimation(int id, Animation animation) {
+        if (this.animations.get(id) == null) {
+            this.animations.put(id, new ArrayList<Animation>());
+            animatedViews.add(id);
+        }
+
+        ArrayList<Animation> anims = this.animations.get(id);
+        anims.add(animation);
     }
 
     /**
-     * Private constructor for initializing the instance with {@link SparkleViewPagerLayout}
-     * and {@link SparkleAnimationPresenter} reference.
+     * Add animations to the target {@link View}.
      *
-     * @param viewPagerLayout ViewPagerLayout object.
+     * @param view      Target Decor.
+     * @param animations Animations to be associated to this Decor.
      */
-    private SparkleMotion(@NonNull SparkleViewPagerLayout viewPagerLayout) {
-        mViewPagerLayout = viewPagerLayout;
-        mViewPager = mViewPagerLayout.getViewPager();
-
-        init();
-    }
-
-    private void init() {
-        if (SparkleMotionCompat.hasPresenter(mViewPager)) {
-            mPresenter = SparkleMotionCompat.getAnimationPresenter(mViewPager);
-        } else {
-            mPresenter = new SparkleAnimationPresenter();
+    void addAnimation(View view, Animation... animations) {
+        if (decorAnimations.get(view) == null) {
+            decorAnimations.put(view, new ArrayList<Animation>(animations.length));
         }
 
-        mAnimations = new ArrayList<Animation>();
-    }
-
-    /**
-     * Assign animations to SparkleMotion, which will then associate the animations to target Views.
-     *
-     * @param animations Animations to run.
-     * @return this instance to chain functions.
-     */
-    public SparkleMotion animate(Animation... animations) {
-        Collections.addAll(mAnimations, animations);
-        return this;
-    }
-
-    /**
-     * Assign target {@link Decor} to SparkleMotion, which will assign the
-     * animations stored in {@link #animate(Animation...)} to {@link SparkleAnimationPresenter}.
-     * This is the last
-     * method to call in order to build a functional ViewPager. Once this is called, a {@link
-     * SparkleAnimationPresenter} will be associated to the ViewPager, and the animations will be
-     * run when scrolling.
-     * <p/>
-     * Note that to use this method, a {@link SparkleViewPagerLayout} must be provided.
-     *
-     * @param decors Target Decors.
-     * @throws IllegalStateException when a ViewPagerLayout is not provided.
-     */
-    public void on(final Decor... decors) {
-        if (mViewPagerLayout == null) {
-            throw new IllegalStateException("A ViewPagerLayout must be provided for animating Decor");
-        }
-
-        Animation[] animations = new Animation[mAnimations.size()];
-        mAnimations.toArray(animations);
-
-        for (Decor decor : decors) {
-            mPresenter.addAnimation(decor, animations);
-        }
-
-        mAnimations.clear();
-
-        ViewPager viewPager = mViewPagerLayout.getViewPager();
-        if (viewPager == null) {
-            throw new NullPointerException("ViewPager cannot be null");
-        }
-
-        SparkleMotionCompat.installAnimationPresenter(viewPager, false, mPresenter);
-
-        for (Decor decor : decors) {
-            mViewPagerLayout.addDecor(decor);
+        ArrayList<Animation> anims = decorAnimations.get(view);
+        if (anims != null) {
+            Collections.addAll(anims, animations);
         }
     }
 
     /**
-     * Assign target Views to SparkleMotion, which will assign the animations stored in {@link
-     * #animate(Animation...)} to {@link SparkleAnimationPresenter}. This is the last method to
-     * call in order to build a functional ViewPager. Once this is called, a
-     * {@link SparkleAnimationPresenter} will be associated to the ViewPager, and the animations
-     * will be run when scrolling.
+     * Run the animations based on the View animations saved within the presenter and the offset of
+     * the scrolling.
      *
-     * @param ids Target View ids.
+     * @param parent        Current page View of the ViewPager.
+     * @param offset        Scrolling offset of the ViewPager.
+     * @param offsetInPixel Scrolling offset in pixels based on the page View.
      */
-    public void on(final int... ids) {
-        Animation[] anims = new Animation[mAnimations.size()];
-        mAnimations.toArray(anims);
+    void presentAnimations(View parent, float offset, float offsetInPixel) {
+        int animMapSize = animations.size();
 
-        for (int id : ids) {
-            mPresenter.addAnimation(id, anims);
+        // Animate all in-page animations.
+        for (int i = 0; i < animMapSize; i++) {
+            int key = animations.keyAt(i);
+            ArrayList<Animation> animations = this.animations.get(key);
+
+            int animListSize = animations.size();
+            for (int j = 0; j < animListSize; j++) {
+                Animation animation = animations.get(j);
+
+                final View viewToAnimate;
+
+                if (key == parent.getId()) {
+                    viewToAnimate = parent;
+                } else {
+                    viewToAnimate = parent.findViewById(key);
+                }
+
+                if (animation == null || viewToAnimate == null) {
+                    continue;
+                }
+
+                animation.animate(viewToAnimate, offset, offsetInPixel);
+            }
         }
+    }
 
-        mAnimations.clear();
+    /**
+     * Run the animations based on the Decor animations saved within the presenter and the offset
+     * of the scrolling.
+     *
+     * @param position Position of the current page.
+     * @param offset   Offset of the ViewPager scrolling.
+     */
+    void presentDecorAnimations(int position, float offset) {
+        // Animate all decor or other View animations.
+        int animMapSize = decorAnimations.size();
+        for (int i = 0; i < animMapSize; i++) {
+            View view = decorAnimations.keyAt(i);
+            ArrayList<Animation> animations = decorAnimations.get(view);
 
-        ViewPager viewPager;
-        if (mViewPagerLayout != null && mViewPager == null) {
-            viewPager = mViewPagerLayout.getViewPager();
-        } else {
-            viewPager = mViewPager;
+            int animListSize = animations.size();
+            for (int j = 0; j < animListSize; j++) {
+                Animation animation = animations.get(j);
+                if (animation == null) {
+                    continue;
+                }
+
+                if (!shouldAnimate(animation.getPage(), position)) {
+                    continue;
+                }
+
+                animation.animate(view, offset, 0);
+            }
         }
+    }
 
-        if (viewPager == null) {
-            throw new NullPointerException("ViewPager cannot be null");
-        }
+    /**
+     * @return A List of ids that Sparkle Motion animates within the ViewPager.
+     */
+    List<Integer> getAnimatedViews() {
+        return animatedViews;
+    }
 
-        SparkleMotionCompat.installAnimationPresenter(viewPager, false, mPresenter);
+    /**
+     * Check the current page newBuilder {@link SparkleMotion} and see if it is within
+     * {@link Page}.
+     *
+     * @param currentPage Current page in ViewPager where the scroll starts.
+     * @return True if the animation should run, false otherwise.
+     */
+    static boolean shouldAnimate(Page page, int currentPage) {
+        return (page.start == page.end && page.start == Page.ALL_PAGES)
+                || page.start <= currentPage && page.end >= currentPage;
     }
 }
