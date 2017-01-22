@@ -3,7 +3,6 @@ package com.ifttt.sparklemotion.animations;
 import android.view.View;
 
 import com.ifttt.sparklemotion.Animation;
-import com.ifttt.sparklemotion.Page;
 
 /**
  * Subclass of {@link Animation} that changes View's scale x and y from a value to another.

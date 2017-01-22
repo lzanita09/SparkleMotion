@@ -50,7 +50,7 @@ public class SlideInAnimation extends Animation {
     private void initViewPosition(final View view, final float offset) {
         View parent = (View) view.getParent();
         if (parent == null) {
-            return ;
+            return;
         }
 
         if (ViewCompat.isLaidOut(view)) {
