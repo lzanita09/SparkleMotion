@@ -130,3 +130,7 @@ artifacts {
     archives sourcesJar
 }
 
+tasks.matching { it instanceof Test }.all {
+    testLogging.events = ["failed", "passed", "skipped"]
+}
+
