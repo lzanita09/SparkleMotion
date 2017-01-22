@@ -7,25 +7,17 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-import java.util.ArrayList;
 
 /**
  * A wrapper FrameLayout containing a {@link ViewPager}. This class supports adding
  * {@link Decor} to the ViewPager, which can be animated across pages.
  * <p/>
  * A Decor of the ViewPager is only for animation purpose, which means if there's no animation
- * associated with it, it will stay at the original position when it is added to the parent.
+ * associated newBuilder it, it will stay at the original position when it is added to the parent.
  */
 public class SparkleViewPagerLayout extends FrameLayout implements ViewPager.OnPageChangeListener {
 
-    private ViewPager mViewPager;
-
-    /**
-     * Index of the ViewPager within this layout.
-     */
-    private int mViewPagerIndex;
-
-    private final ArrayList<Decor> mDecors = new ArrayList<Decor>();
+    private ViewPager viewPager;
 
     public SparkleViewPagerLayout(Context context) {
         super(context);
@@ -42,7 +34,7 @@ public class SparkleViewPagerLayout extends FrameLayout implements ViewPager.OnP
     @Override
     public void addView(View child, int index, ViewGroup.LayoutParams params) {
         if (child instanceof ViewPager) {
-            setViewPager((ViewPager) child, index);
+            setViewPager((ViewPager) child);
         }
 
         super.addView(child, index, params);
@@ -52,10 +44,9 @@ public class SparkleViewPagerLayout extends FrameLayout implements ViewPager.OnP
      * Setup a ViewPager within this layout, so that we can use it to run animations.
      *
      * @param viewPager ViewPager object being added to this layout.
-     * @param index     Index of the ViewPager being added to this layout.
      */
-    private void setViewPager(@NonNull ViewPager viewPager, int index) {
-        if (mViewPager != null) {
+    private void setViewPager(@NonNull ViewPager viewPager) {
+        if (this.viewPager != null) {
             throw new IllegalStateException("SparkleViewPagerLayout already has a ViewPager set.");
         }
 
@@ -63,10 +54,8 @@ public class SparkleViewPagerLayout extends FrameLayout implements ViewPager.OnP
             SparkleMotionCompat.installAnimationPresenter(viewPager);
         }
 
-        mViewPagerIndex = index < 0 ? getChildCount() : index;
-
-        mViewPager = viewPager;
-        mViewPager.addOnPageChangeListener(this);
+        this.viewPager = viewPager;
+        this.viewPager.addOnPageChangeListener(this);
     }
 
     /**
@@ -75,75 +64,11 @@ public class SparkleViewPagerLayout extends FrameLayout implements ViewPager.OnP
      * @return ViewPager object.
      */
     public ViewPager getViewPager() {
-        return mViewPager;
-    }
-
-    /**
-     * Add {@link Decor} into this layout. Decor will be added to the
-     * layout based on its start page and end page. Calling this method will also enables children
-     * drawing order, which
-     * follows the order of the parameters, e.g the first Decor will be drawn first.
-     *
-     * @param decor Decor object to be added to this layout.
-     * @throws IllegalStateException when ViewPager is not set in this layout.
-     */
-    @SuppressWarnings("unused")
-    public void addDecor(Decor decor) {
-        if (mViewPager == null) {
-            throw new IllegalStateException(
-                    "ViewPager is not found in SparkleViewPagerLayout, please provide a ViewPager first");
-        }
-
-        if (decor == null) {
-            return;
-        }
-
-        // Make sure there is no duplicate.
-        if (mDecors.contains(decor)) {
-            return;
-        }
-
-        mDecors.add(decor);
-
-        // Add slide in and slide out animations to the presenter.
-        SparkleAnimationPresenter presenter = SparkleMotionCompat.getAnimationPresenter(mViewPager);
-        if (presenter == null) {
-            throw new IllegalStateException("Failed initializing animation");
-        }
-
-        presenter.addAnimation(decor, decor.slideInAnimation, decor.slideOutAnimation);
-
-        if (decor.layoutBehindViewPage) {
-            addView(decor.contentView, mViewPagerIndex);
-            mViewPagerIndex++;
-        } else {
-            addView(decor.contentView);
-        }
-
-        layoutDecors(mViewPager.getCurrentItem(), 0);
-    }
-
-    /**
-     * Remove Decor objects from this layout.
-     *
-     * @param decor Decor objects to be removed.
-     */
-    @SuppressWarnings("unused")
-    public void removeDecor(Decor decor) {
-        int indexOfRemoved = mDecors.indexOf(decor);
-        if (indexOfRemoved < 0) {
-            throw new IllegalArgumentException("Decor is not added to SparkleViewPagerLayout");
-        }
-
-        mDecors.remove(decor);
-        removeDecorView(decor);
+        return viewPager;
     }
 
     @Override
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-        if (positionOffset >= 0) {
-            layoutDecors(position, positionOffset);
-        }
     }
 
     @Override
@@ -163,41 +88,10 @@ public class SparkleViewPagerLayout extends FrameLayout implements ViewPager.OnP
      */
     private void enableLayer(boolean enable) {
         final int layerType = enable ? LAYER_TYPE_HARDWARE : LAYER_TYPE_NONE;
-        for (Decor decor : mDecors) {
-            if (decor.withLayer) {
-                decor.contentView.setLayerType(layerType, null);
-            }
-        }
-    }
-
-    /**
-     * Based on the <code>startPage</code>, <code>endPage</code> and <code>layoutBehindViewPager</code>
-     * from {@link Decor}, show or hide Decors to this FrameLayout.
-     *
-     * @param currentPage Currently displayed ViewPager page.
-     * @param offset      ViewPager scrolling offset.
-     */
-    private void layoutDecors(int currentPage, float offset) {
-        float currentPageOffset = currentPage + offset;
-        int decorsSize = mDecors.size();
-        for (int i = 0; i < decorsSize; i++) {
-            Decor decor = mDecors.get(i);
-            if (decor.contentView.getVisibility() == VISIBLE && decor.startPage != Page.ALL_PAGES) {
-                if (decor.startPage > currentPageOffset || decor.endPage + 1 < currentPageOffset) {
-                    decor.contentView.setVisibility(INVISIBLE);
-                }
-            } else if (decor.startPage == Page.ALL_PAGES
-                    || (decor.startPage <= currentPageOffset && decor.endPage + 1 >= currentPageOffset)) {
-                decor.contentView.setVisibility(VISIBLE);
-            }
-        }
-    }
-
-    private void removeDecorView(Decor decor) {
-        removeView(decor.contentView);
-
-        if (decor.layoutBehindViewPage) {
-            mViewPagerIndex--;
-        }
+//        for (Decor decor : decors) {
+//            if (decor.withLayer) {
+//                decor.contentView.setLayerType(layerType, null);
+//            }
+//        }
     }
 }

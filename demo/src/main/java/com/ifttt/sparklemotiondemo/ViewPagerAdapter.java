@@ -19,12 +19,12 @@ public abstract class ViewPagerAdapter extends PagerAdapter {
     protected abstract View getView(int position, ViewGroup container);
 
     /**
-     * Determines whether a page View is associated with a specific key object as
+     * Determines whether a page View is associated newBuilder a specific key object as
      * returned by instantiateItem(ViewGroup, int).
      *
-     * @param view Page View to check for association with object
-     * @param object Object to check for association with view
-     * @return true if view is associated with the key object object.
+     * @param view Page View to check for association newBuilder object
+     * @param object Object to check for association newBuilder view
+     * @return true if view is associated newBuilder the key object object.
      */
     @Override
     public final boolean isViewFromObject(View view, Object object) {

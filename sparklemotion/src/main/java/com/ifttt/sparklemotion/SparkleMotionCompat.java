@@ -6,15 +6,15 @@ import android.support.v4.view.ViewPager;
 import android.view.View;
 
 /**
- * Helper class for installing {@link SparkleAnimationPresenter} into a {@link ViewPager}, so
+ * Helper class for installing {@link SparkleMotion} into a {@link ViewPager}, so
  * that any ViewPager can use SparkleMotion animations.
  * <p/>
- * The {@link SparkleAnimationPresenter} instance will be referenced by {@link View#setTag(int,
+ * The {@link SparkleMotion} instance will be referenced by {@link View#setTag(int,
  * Object)} within the ViewPager, and a {@link android.support.v4.view.ViewPager.PageTransformer}
  * and a {@link android.support.v4.view.ViewPager.OnPageChangeListener} will be set as well
  * to provide functionality of SparkleMotion.
  * <p/>
- * Note: Once a SparkleAnimationPresenter is installed, if you would like to provide another
+ * Note: Once a SparkleMotion is installed, if you would like to provide another
  * PageTransformer, you need to use
  * {@link #setPageTransformer(ViewPager, boolean, ViewPager.PageTransformer)} method, so
  * that the presenter is preserved.
@@ -26,18 +26,18 @@ public final class SparkleMotionCompat {
     }
 
     /**
-     * Given a ViewPager and a {@link SparkleAnimationPresenter}, sets a PageTransformer and a
+     * Given a ViewPager and a {@link SparkleMotion}, sets a PageTransformer and a
      * OnPageChangeListener that provides functionality of the presenter.
      * The presenter will be referenced as a tag of the View.
      *
      * @param viewPager ViewPager instance.
      * @param reverseDrawingOrder Whether the ViewPager should reverse it child Views' drawing
      * order.
-     * @param presenter SparkleAnimationPresenter instance to be installed.
+     * @param presenter SparkleMotion instance to be installed.
      * @see {@link ViewPager#setPageTransformer(boolean, ViewPager.PageTransformer)}
      */
     static void installAnimationPresenter(@NonNull final ViewPager viewPager, boolean reverseDrawingOrder,
-            final SparkleAnimationPresenter presenter) {
+            final SparkleMotion presenter) {
         Object tagObject = viewPager.getTag(R.id.presenter_id);
         if (tagObject != null && tagObject == presenter) {
             // If the presenter is the same as the one already in the ViewPager, return.
@@ -94,27 +94,27 @@ public final class SparkleMotionCompat {
     }
 
     /**
-     * Convenient method for installing {@link SparkleAnimationPresenter}. A new
-     * SparkleAnimationPresenter will be created and attached to the ViewPager.
+     * Convenient method for installing {@link SparkleMotion}. A new
+     * SparkleMotion will be created and attached to the ViewPager.
      *
      * @param viewPager ViewPager instance.
      * @param reverseDrawingOrder Whether the ViewPager should reverse it child Views' drawing
      * order.
-     * @see {@link #installAnimationPresenter(ViewPager, boolean, SparkleAnimationPresenter)}
+     * @see {@link #installAnimationPresenter(ViewPager, boolean, SparkleMotion)}
      * @see {@link #installAnimationPresenter(ViewPager)}
      */
     static void installAnimationPresenter(@NonNull ViewPager viewPager, boolean reverseDrawingOrder) {
-        final SparkleAnimationPresenter presenter = new SparkleAnimationPresenter();
+        final SparkleMotion presenter = new SparkleMotion();
         installAnimationPresenter(viewPager, reverseDrawingOrder, presenter);
     }
 
     /**
-     * Convenient method for installing {@link SparkleAnimationPresenter} without reversing
+     * Convenient method for installing {@link SparkleMotion} without reversing
      * ViewPager's child Views drawing order.
-     * A new SparkleAnimationPresenter will be created and attached to the ViewPager.
+     * A new SparkleMotion will be created and attached to the ViewPager.
      *
      * @param viewPager ViewPager instance.
-     * @see {@link #installAnimationPresenter(ViewPager, boolean, SparkleAnimationPresenter)}
+     * @see {@link #installAnimationPresenter(ViewPager, boolean, SparkleMotion)}
      * @see {@link #installAnimationPresenter(ViewPager, boolean)}
      */
     static void installAnimationPresenter(@NonNull ViewPager viewPager) {
@@ -124,7 +124,7 @@ public final class SparkleMotionCompat {
     /**
      * Sets a {@link android.support.v4.view.ViewPager.PageTransformer} to the given ViewPager.
      * Using this method to set PageTransformer is required for the ViewPagers that already have
-     * {@link SparkleAnimationPresenter} installed.
+     * {@link SparkleMotion} installed.
      *
      * @param viewPager ViewPager instance.
      * @param reversDrawingOrder Whether the ViewPager should reverse it child Views' drawing
@@ -136,12 +136,12 @@ public final class SparkleMotionCompat {
     public static void setPageTransformer(@NonNull ViewPager viewPager, boolean reversDrawingOrder,
             @Nullable final ViewPager.PageTransformer transformer) {
         Object tagObject = viewPager.getTag(R.id.presenter_id);
-        if (tagObject == null || !(tagObject instanceof SparkleAnimationPresenter)) {
+        if (tagObject == null || !(tagObject instanceof SparkleMotion)) {
             viewPager.setPageTransformer(reversDrawingOrder, transformer);
             return;
         }
 
-        final SparkleAnimationPresenter presenter = (SparkleAnimationPresenter) tagObject;
+        final SparkleMotion presenter = (SparkleMotion) tagObject;
         ViewPager.PageTransformer transformerWrapper = new ViewPager.PageTransformer() {
             @Override
             public void transformPage(View page, float position) {
@@ -159,30 +159,30 @@ public final class SparkleMotionCompat {
     }
 
     /**
-     * Gets the {@link SparkleAnimationPresenter} instance attached to the given ViewPager.
+     * Gets the {@link SparkleMotion} instance attached to the given ViewPager.
      *
      * @param viewPager ViewPager instance.
-     * @return SparkleAnimationPresenter instance if set, or null.
+     * @return SparkleMotion instance if set, or null.
      */
-    static SparkleAnimationPresenter getAnimationPresenter(ViewPager viewPager) {
+    static SparkleMotion getAnimationPresenter(ViewPager viewPager) {
         if (viewPager == null) {
             return null;
         }
 
         Object tagObject = viewPager.getTag(R.id.presenter_id);
-        if (tagObject == null || !(tagObject instanceof SparkleAnimationPresenter)) {
+        if (tagObject == null || !(tagObject instanceof SparkleMotion)) {
             return null;
         }
 
-        return (SparkleAnimationPresenter) tagObject;
+        return (SparkleMotion) tagObject;
     }
 
     /**
-     * Convenient method to check whether {@link SparkleAnimationPresenter} is attached to the
+     * Convenient method to check whether {@link SparkleMotion} is attached to the
      * given ViewPager.
      *
      * @param viewPager ViewPager instance.
-     * @return True if there is a SparkleAnimationPresenter attached, false otherwise.
+     * @return True if there is a SparkleMotion attached, false otherwise.
      */
     static boolean hasPresenter(ViewPager viewPager) {
         return getAnimationPresenter(viewPager) != null;

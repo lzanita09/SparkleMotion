@@ -3,6 +3,7 @@ package com.ifttt.sparklemotiondemo;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
+
 import com.ifttt.sparklemotion.Page;
 import com.ifttt.sparklemotion.SparkleMotion;
 import com.ifttt.sparklemotion.animations.ScaleAnimation;
@@ -21,10 +22,9 @@ public final class ScaleViewPagerActivity extends Activity {
         ViewPager viewPager = (ViewPager) findViewById(R.id.view_pager);
         viewPager.setAdapter(new PagerAdapter());
 
-        ScaleAnimation scaleAnimation = new ScaleAnimation(Page.allPages(), 1f, 1f, 0.3f, 0.3f);
+        ScaleAnimation scaleAnimation = new ScaleAnimation(1f, 1f, 0.3f, 0.3f);
 
-        SparkleMotion.with(viewPager) //
-                .animate(scaleAnimation) //
-                .on(R.id.pic_img_view);
+        SparkleMotion.newBuilder(viewPager)
+                .animate(scaleAnimation, Page.allPages(), R.id.pic_img_view);
     }
 }

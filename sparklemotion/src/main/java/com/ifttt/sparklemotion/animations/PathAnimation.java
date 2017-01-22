@@ -5,8 +5,6 @@ import android.graphics.PathMeasure;
 import android.view.View;
 
 import com.ifttt.sparklemotion.Animation;
-import com.ifttt.sparklemotion.Decor;
-import com.ifttt.sparklemotion.Page;
 
 /**
  * Subclass of {@link Animation} that animates the view based on a {@link Path}. It is essentially
@@ -14,9 +12,9 @@ import com.ifttt.sparklemotion.Page;
  */
 public class PathAnimation extends Animation {
 
-    private final PathMeasure mPathMeasure;
+    private final PathMeasure pathMeasure;
 
-    private final boolean mAbsolute;
+    private final boolean absolute;
 
     /**
      * Constructor for building a PathAnimation for a range of pages.
@@ -25,26 +23,26 @@ public class PathAnimation extends Animation {
      * Decor content View will only animate the translation X value given by the animation, instead of the combination
      * of the translation X value of the animation and ViewPager scrolling.
      *
-     * @param page   Page object with specific page information about this animation.
+     * @param page   Page object newBuilder specific page information about this animation.
      * @param path     Path object that the animated View will follow.
      * @param absolute Flag to set whether this animation should be relative to the scrolling page or not. If set
      *                 to true, the View being animated will ignore the scrolling of the parent View.
      */
-    public PathAnimation(Page page, Path path, boolean absolute) {
-        super(page);
-        mPathMeasure = new PathMeasure(path, false);
-        mAbsolute = absolute;
+    public PathAnimation(Path path, boolean absolute) {
+        super();
+        pathMeasure = new PathMeasure(path, false);
+        this.absolute = absolute;
     }
 
     @Override
     public void onAnimate(View v, float offset, float offsetInPixel) {
-        if (!mAbsolute) {
+        if (!absolute) {
             offsetInPixel = 0;
         }
         offset = Math.abs(offset);
 
         float[] coordinates = new float[2];
-        mPathMeasure.getPosTan(mPathMeasure.getLength() * offset, coordinates, null);
+        pathMeasure.getPosTan(pathMeasure.getLength() * offset, coordinates, null);
         v.setTranslationX(coordinates[0] + offsetInPixel);
         v.setTranslationY(coordinates[1]);
     }
